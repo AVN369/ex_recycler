@@ -4,17 +4,25 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 
+import com.problem.recyclerex.database.ImageItemModel;
+import com.problem.recyclerex.database.ImageItemsParser;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class RecyclerExService extends IntentService {
     private static final String ACTION_DOWNLOAD = "com.problem.recyclerex.services.action.DOWNLOAD";
     private static final String PARAM_URL = "com.problem.recyclerex.services.extra.PARAM_URL";
-    private static final String EXTRA_PARAM2 = "com.problem.recyclerex.services.extra.PARAM2";
+    public static final String DATA_FETCH_ACTION_STRING = "com.problem.recyclerex.services.extra.DATA_FETCH_ACTION";
 
     public RecyclerExService() {
         super("RecyclerExService");
@@ -30,7 +38,6 @@ public class RecyclerExService extends IntentService {
         Intent intent = new Intent(context, RecyclerExService.class);
         intent.setAction(ACTION_DOWNLOAD);
         intent.putExtra(PARAM_URL, url);
-        intent.putExtra(EXTRA_PARAM2, parse);
         context.startService(intent);
     }
 
@@ -40,19 +47,34 @@ public class RecyclerExService extends IntentService {
             final String action = intent.getAction();
             if (ACTION_DOWNLOAD.equals(action)) {
                 final String url = intent.getStringExtra(PARAM_URL);
-                final int parse = intent.getIntExtra(EXTRA_PARAM2, -1);
                 String response = handleActionDownload(url);
+                Intent receiverIntent = new Intent();
+                receiverIntent.setAction(DATA_FETCH_ACTION_STRING);
+                ArrayList<ImageItemModel> imageItemModels = null;
+                boolean status = false;
                 if(response == null){
-
+                    //TODO: Fire FAILURE
+                    status = false;
                 }else{
-
+                    try {
+                        JSONObject jsonObject = new JSONObject(response);
+                        JSONArray jsonArray = jsonObject.optJSONArray("data");
+                        imageItemModels = ImageItemsParser.getImageItemModels(jsonArray);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        status = false;
+                        //TODO: Fire FAILURE
+                    }
                 }
+                receiverIntent.putParcelableArrayListExtra("data", imageItemModels);
+                receiverIntent.putExtra("status", status);
+                sendBroadcast(receiverIntent);
             }
         }
     }
 
     /**
-     * Handle action Foo in the provided background thread with the provided
+     * Handle action Download in the provided background thread with the provided
      * parameters.
      */
     private String handleActionDownload(String urlString) {

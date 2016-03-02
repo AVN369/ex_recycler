@@ -3,6 +3,7 @@ package com.problem.recyclerex;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -10,14 +11,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.problem.recyclerex.adapters.ImageListAdapter;
+import com.problem.recyclerex.database.ImageItemModel;
+import com.problem.recyclerex.services.RecyclerExService;
 
-import org.json.JSONArray;
-import org.json.JSONException;
+import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -29,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayoutManager mLinearLayoutManager;
     private ImageListAdapter mImageListAdapter;
     private Context mContext;
-    private ImageSetsReceiver mMyReceiver;
+    private ImageSetsReceiver mImageSetsReceiver;
+    private ArrayList<ImageItemModel> mImageItemModels;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +54,23 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(mImageSetsReceiver == null) {
+            mImageSetsReceiver = new ImageSetsReceiver();
+        }
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(RecyclerExService.DATA_FETCH_ACTION_STRING);
+        registerReceiver(mImageSetsReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onStop() {
+        unregisterReceiver(mImageSetsReceiver);
+        super.onStop();
     }
 
     @Override
@@ -81,16 +101,14 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
 
             if(!intent.getBooleanExtra("status", false)){
+                //TODO : Do something
                 return;
             }
 
             if(intent.hasExtra("data")) {
-                String data = intent.getStringExtra("data");
-                JSONArray jsonArray = null;
-                try {
-                    jsonArray = new JSONArray(data);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                ArrayList<ImageItemModel> imageItemModels = intent.getParcelableArrayListExtra("data");
+                if(imageItemModels != null && imageItemModels.size() > 0){
+                    //TODO : Do something
                 }
             }
         }
