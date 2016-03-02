@@ -12,3 +12,7 @@ A simple example to use recyclerview to display a list of items.
                
     b. Else -> Shows the failure message to the user
     
+Screenshot:
+
+![Alt text](./screenshot.png?raw=true "Optional Title")
+    
