@@ -34,7 +34,7 @@ public class RecyclerExService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startActionDownload(Context context, String url, int parse) {
+    public static void startActionDownload(Context context, String url) {
         Intent intent = new Intent(context, RecyclerExService.class);
         intent.setAction(ACTION_DOWNLOAD);
         intent.putExtra(PARAM_URL, url);
@@ -60,6 +60,9 @@ public class RecyclerExService extends IntentService {
                         JSONObject jsonObject = new JSONObject(response);
                         JSONArray jsonArray = jsonObject.optJSONArray("data");
                         imageItemModels = ImageItemsParser.getImageItemModels(jsonArray);
+                        if(imageItemModels != null && imageItemModels.size() > 0) {
+                            status = true;
+                        }
                     } catch (JSONException e) {
                         e.printStackTrace();
                         status = false;
@@ -80,17 +83,17 @@ public class RecyclerExService extends IntentService {
     private String handleActionDownload(String urlString) {
         //This should be the implementation to get the data from the server,
         //but since url is not availble , we are going to use a local file
-        HttpURLConnection mHttpsURLConnection;
+        HttpURLConnection mHttpURLConnection;
         try {
             URL url = new URL(urlString);
-            mHttpsURLConnection = (HttpURLConnection) url.openConnection();
+            mHttpURLConnection = (HttpURLConnection) url.openConnection();
 
-            mHttpsURLConnection.setReadTimeout(7000);
-            mHttpsURLConnection.setConnectTimeout(7000);
-            mHttpsURLConnection.setRequestMethod("GET");
-            mHttpsURLConnection.setDoOutput(true);
+            mHttpURLConnection.setReadTimeout(7000);
+            mHttpURLConnection.setConnectTimeout(7000);
+            mHttpURLConnection.setRequestMethod("GET");
+            mHttpURLConnection.setDoOutput(false);
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(mHttpsURLConnection.getInputStream()));
+            BufferedReader br = new BufferedReader(new InputStreamReader(mHttpURLConnection.getInputStream()));
             String line = "";
             StringBuilder responseOutput = new StringBuilder();
             while((line = br.readLine()) != null ) {
