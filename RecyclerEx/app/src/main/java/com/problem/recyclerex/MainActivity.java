@@ -1,6 +1,8 @@
 package com.problem.recyclerex;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,6 +16,9 @@ import android.view.MenuItem;
 
 import com.problem.recyclerex.adapters.ImageListAdapter;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
@@ -24,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayoutManager mLinearLayoutManager;
     private ImageListAdapter mImageListAdapter;
     private Context mContext;
+    private ImageSetsReceiver mMyReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,5 +73,27 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public class ImageSetsReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if(!intent.getBooleanExtra("status", false)){
+                return;
+            }
+
+            if(intent.hasExtra("data")) {
+                String data = intent.getStringExtra("data");
+                JSONArray jsonArray = null;
+                try {
+                    jsonArray = new JSONArray(data);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
     }
 }
