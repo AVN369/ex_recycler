@@ -9,6 +9,9 @@ import android.os.Parcelable;
 public class ImageItemModel implements Parcelable{
     private String mId, mUrl, mTitle;
 
+    public ImageItemModel() {
+    }
+
     public ImageItemModel(String mId, String mUrl, String mTitle) {
         this.mId = mId;
         this.mUrl = mUrl;

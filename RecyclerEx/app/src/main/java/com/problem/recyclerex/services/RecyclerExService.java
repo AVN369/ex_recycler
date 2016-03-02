@@ -6,6 +6,7 @@ import android.content.Intent;
 
 import com.problem.recyclerex.database.ImageItemModel;
 import com.problem.recyclerex.database.ImageItemsParser;
+import com.problem.recyclerex.database.ImageItemsSQLiteHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -53,7 +54,6 @@ public class RecyclerExService extends IntentService {
                 ArrayList<ImageItemModel> imageItemModels = null;
                 boolean status = false;
                 if(response == null){
-                    //TODO: Fire FAILURE
                     status = false;
                 }else{
                     try {
@@ -62,11 +62,11 @@ public class RecyclerExService extends IntentService {
                         imageItemModels = ImageItemsParser.getImageItemModels(jsonArray);
                         if(imageItemModels != null && imageItemModels.size() > 0) {
                             status = true;
+                            ImageItemsSQLiteHelper.insertImageItems(getApplicationContext(), imageItemModels);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                         status = false;
-                        //TODO: Fire FAILURE
                     }
                 }
                 receiverIntent.putParcelableArrayListExtra("data", imageItemModels);

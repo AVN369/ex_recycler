@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,6 +17,7 @@ import android.view.View;
 
 import com.problem.recyclerex.adapters.ImageListAdapter;
 import com.problem.recyclerex.database.ImageItemModel;
+import com.problem.recyclerex.database.ImageItemsSQLiteHelper;
 import com.problem.recyclerex.services.RecyclerExService;
 import com.problem.recyclerex.utils.Constants;
 
@@ -27,12 +29,17 @@ import butterknife.ButterKnife;
 public class MainActivity extends AppCompatActivity {
 
     @Bind(R.id.imagelist_rv) RecyclerView mImageListRV;
+    @Bind(R.id.loader_container) View mLoaderContainer;
+    @Bind(R.id.failure_container) View mFailureContainer;
+    @Bind(R.id.root_view) View mRootView;
 
     private LinearLayoutManager mLinearLayoutManager;
     private ImageListAdapter mImageListAdapter;
     private Context mContext;
     private ImageSetsReceiver mImageSetsReceiver;
     private ArrayList<ImageItemModel> mImageItemModels;
+
+    private boolean isDataBeingFetched = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,15 +49,15 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mContext = this;
-
         mLinearLayoutManager = new LinearLayoutManager(mContext);
         mImageListRV.setLayoutManager(mLinearLayoutManager);
 
+        fetchLocalData();
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                RecyclerExService.startActionDownload(mContext, Constants.URL);
+                fetchLocalData();
             }
         });
     }
@@ -81,9 +88,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -94,10 +98,46 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void fetchLocalData(){
+        ArrayList<ImageItemModel> imageItemModels = ImageItemsSQLiteHelper.getImageItemModels(mContext);
+        if(imageItemModels == null || imageItemModels.size() == 0){
+            mLoaderContainer.setVisibility(View.VISIBLE);
+            mFailureContainer.setVisibility(View.GONE);
+            fetchData();
+        }else{
+            mImageItemModels = imageItemModels;
+            initializeList();
+        }
+
+    }
+
+    private void fetchData(){
+        if(isDataBeingFetched){
+            Snackbar.make(mRootView, R.string.is_being_fetched, Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+        isDataBeingFetched = true;
+        RecyclerExService.startActionDownload(mContext, Constants.URL);
+    }
+
     private void initializeList(){
         if(mImageListAdapter == null){
             mImageListAdapter = new ImageListAdapter(mImageItemModels, mContext);
             mImageListRV.setAdapter(mImageListAdapter);
+        }else{
+            mImageListAdapter.changeSet(mImageItemModels);
+        }
+    }
+
+    private void processData(ArrayList<ImageItemModel> imageItemModels){
+        isDataBeingFetched = false;
+        mLoaderContainer.setVisibility(View.GONE);
+        if(imageItemModels != null && imageItemModels.size() > 0){
+            mFailureContainer.setVisibility(View.GONE);
+            mImageItemModels = imageItemModels;
+            initializeList();
+        }else{
+            mFailureContainer.setVisibility(View.VISIBLE);
         }
     }
 
@@ -105,20 +145,17 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-
             if(!intent.getBooleanExtra("status", false)){
-                //TODO : Do something
+                processData(null);
                 return;
             }
 
             if(intent.hasExtra("data")) {
                 ArrayList<ImageItemModel> imageItemModels = intent.getParcelableArrayListExtra("data");
-                if(imageItemModels != null && imageItemModels.size() > 0){
-                    mImageItemModels = imageItemModels;
-                    initializeList();
-                }
+                processData(imageItemModels);
+            }else{
+                processData(null);
             }
         }
-
     }
 }

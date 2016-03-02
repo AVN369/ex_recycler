@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">RecyclerEx</string>
     <string name="action_settings">Settings</string>
+
+    <string name="is_being_fetched">Please wait, data is being fetched.</string>
+
+    <string name="failure_message">Oops!! Something went wrong. Please click on the retry button to try again.</string>
+    <string name="loading_message">Please wait while we load the data for you</string>
 </resources>

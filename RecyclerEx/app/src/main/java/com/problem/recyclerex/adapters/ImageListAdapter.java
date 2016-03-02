@@ -48,6 +48,11 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
         return (mImageItemModels != null)?mImageItemModels.size():0;
     }
 
+    public void changeSet(ArrayList<ImageItemModel> imageItemModels){
+        mImageItemModels = imageItemModels;
+        notifyDataSetChanged();
+    }
+
     public class ImageListViewHolder extends RecyclerView.ViewHolder {
 
         private ImageView mImageIV;
